@@ -9,13 +9,26 @@ import os
 
 class EvilBW16GUI:
     def __init__(self, root):
-        ctk.set_appearance_mode("dark")  # Set dark mode as default
-        ctk.set_default_color_theme("blue")  # Themes: "blue", "dark-blue", "green"
+        ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("blue")
 
         self.root = root
         self.root.title("Evil-BW16 Control Panel")
-        self.root.geometry("928x1000")  # Initial window size
-        self.root.resizable(True, True)  # Make window resizable
+        self.root.geometry("1200x800")  # Wider initial window for drawer layout
+        self.root.resizable(True, True)
+
+        # Create main container
+        self.main_container = ctk.CTkFrame(self.root)
+        self.main_container.pack(fill="both", expand=True)
+
+        # Create left drawer
+        self.drawer = ctk.CTkFrame(self.main_container, width=200, corner_radius=0)
+        self.drawer.pack(side="left", fill="y", padx=0, pady=0)
+        self.drawer.pack_propagate(False)  # Prevent drawer from shrinking
+
+        # Create main content area
+        self.content_area = ctk.CTkFrame(self.main_container)
+        self.content_area.pack(side="left", fill="both", expand=True, padx=10, pady=5)
 
         # Handle icon loading
         try:
@@ -41,184 +54,142 @@ class EvilBW16GUI:
         self.read_thread = None
         self.stop_reading = threading.Event()
 
-        self.setup_theme_switch()
-        self.setup_logo_frame()
-        self.setup_connection_frame()
-        self.setup_command_frame()
-        self.setup_target_frame()
-        self.setup_output_frame()
+        self.setup_drawer()
+        self.setup_content_area()
 
         self.tray_icon = None
         self.setup_tray_icon()
-
         self.root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
-    def setup_theme_switch(self):
-        # Create a frame for the theme switch in the top-right corner
-        self.theme_frame = ctk.CTkFrame(self.root, corner_radius=0)
-        self.theme_frame.pack(side="top", anchor="ne", padx=10, pady=5)
-
-        self.theme_switch_var = ctk.StringVar(value="dark")  # Set initial value to dark
-        
-        self.theme_switch = ctk.CTkSwitch(
-            self.theme_frame,
-            text="Dark Mode",
-            command=self.toggle_theme,
-            variable=self.theme_switch_var,
-            onvalue="dark",
-            offvalue="light",
-            font=("Arial", 12)
-        )
-        self.theme_switch.pack(padx=10, pady=5)
-        self.theme_switch.select()  # Start with dark mode selected
-
-    def toggle_theme(self):
-        if self.theme_switch_var.get() == "dark":
-            ctk.set_appearance_mode("dark")
-        else:
-            ctk.set_appearance_mode("light")
-
-    def setup_logo_frame(self):
-        frame = ctk.CTkFrame(self.root, corner_radius=10)
-        frame.pack(fill="x", padx=10, pady=(2, 2))  # Reduced padding
-
-        if self.logo_image:
+    def setup_drawer(self):
+        # Logo at top of drawer
+        if hasattr(self, 'logo_image') and self.logo_image:
             ui_logo = self.logo_image.copy()
-            ui_logo.thumbnail((120, 120), Image.Resampling.LANCZOS)  # 120x120 logo size
-            logo_label = ctk.CTkLabel(frame, image=ImageTk.PhotoImage(ui_logo), text="")
-            logo_label.pack(pady=2)  # Reduced padding
+            ui_logo.thumbnail((120, 120), Image.Resampling.LANCZOS)
+            logo_label = ctk.CTkLabel(self.drawer, image=ImageTk.PhotoImage(ui_logo), text="")
+            logo_label.pack(pady=(10, 5))
 
-        title_label = ctk.CTkLabel(frame, text="Evil-BW16 Control Panel", font=("Arial", 24, "bold"))
-        title_label.pack(pady=2)  # Reduced padding
+        # Title under logo
+        title_label = ctk.CTkLabel(self.drawer, text="Evil-BW16", font=("Arial", 20, "bold"))
+        title_label.pack(pady=(0, 20))
 
-    def setup_connection_frame(self):
-        frame = ctk.CTkFrame(self.root, corner_radius=10)
-        frame.pack(fill="x", padx=10, pady=5)
+        # Connection Frame
+        conn_frame = ctk.CTkFrame(self.drawer)
+        conn_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(frame, text="Serial Port:").grid(column=0, row=0, padx=5, pady=5, sticky="w")
-        self.port_combo = ctk.CTkComboBox(frame, values=self.get_serial_ports())
-        self.port_combo.grid(column=1, row=0, padx=5, pady=5, sticky="w")
-        if self.port_combo.get():
-            self.port_combo.set(self.port_combo.get())
+        ctk.CTkLabel(conn_frame, text="Port:").pack(pady=2)
+        self.port_combo = ctk.CTkComboBox(conn_frame, values=self.get_serial_ports(), width=200)
+        self.port_combo.pack(pady=2)
 
-        self.refresh_button = ctk.CTkButton(frame, text="Refresh", command=self.refresh_ports)
-        self.refresh_button.grid(column=2, row=0, padx=5, pady=5, sticky="w")
+        self.refresh_button = ctk.CTkButton(conn_frame, text="Refresh", command=self.refresh_ports, width=200)
+        self.refresh_button.pack(pady=2)
 
-        ctk.CTkLabel(frame, text="Baud Rate:").grid(column=3, row=0, padx=5, pady=5, sticky="w")
-        self.baud_combo = ctk.CTkComboBox(frame, values=["9600", "19200", "38400", "57600", "115200"], state="readonly")
-        self.baud_combo.grid(column=4, row=0, padx=5, pady=5, sticky="w")
+        ctk.CTkLabel(conn_frame, text="Baud Rate:").pack(pady=2)
+        self.baud_combo = ctk.CTkComboBox(conn_frame, values=["9600", "19200", "38400", "57600", "115200"], 
+                                         state="readonly", width=200)
+        self.baud_combo.pack(pady=2)
         self.baud_combo.set("115200")
 
-        self.connect_button = ctk.CTkButton(frame, text="Connect", command=self.toggle_connection)
-        self.connect_button.grid(column=5, row=0, padx=5, pady=5, sticky="w")
+        self.connect_button = ctk.CTkButton(conn_frame, text="Connect", command=self.toggle_connection, width=200)
+        self.connect_button.pack(pady=5)
 
-        self.status_label = ctk.CTkLabel(frame, text="Not Connected", text_color="red")
-        self.status_label.grid(column=6, row=0, padx=5, pady=5, sticky="w")
+        self.status_label = ctk.CTkLabel(conn_frame, text="Not Connected", text_color="red")
+        self.status_label.pack(pady=2)
 
-    def setup_command_frame(self):
-        frame = ctk.CTkFrame(self.root, corner_radius=10)
-        frame.pack(fill="x", padx=10, pady=5)
+        # Command Buttons Frame
+        cmd_frame = ctk.CTkFrame(self.drawer)
+        cmd_frame.pack(fill="x", padx=5, pady=5)
 
-        # Button frame for command buttons
-        button_frame = ctk.CTkFrame(frame, corner_radius=0)
-        button_frame.pack(fill="x", padx=5, pady=5)
+        commands = [
+            ("⚡ Start", "start"),      # Lightning bolt for Start
+            ("⏹️ Stop", "stop"),        # Stop symbol
+            ("🔍 Scan", "scan"),        # Magnifying glass for Scan
+            ("📊 Results", "results"),  # Chart for Results
+            ("ℹ️ Info", "info"),        # Info symbol
+            ("❓ Help", "help")         # Question mark for Help
+        ]
 
-        # Create buttons with equal width
-        self.start_button = ctk.CTkButton(button_frame, text="Start", command=lambda: self.send_command("start"))
-        self.start_button.pack(side="left", padx=5, expand=True)
+        for text, cmd in commands:
+            btn = ctk.CTkButton(cmd_frame, text=text, 
+                              command=lambda c=cmd: self.send_command(c), 
+                              width=180,
+                              height=32,
+                              font=("Arial", 12))
+            btn.pack(pady=2)  
 
-        self.stop_button = ctk.CTkButton(button_frame, text="Stop", command=lambda: self.send_command("stop"))
-        self.stop_button.pack(side="left", padx=5, expand=True)
-
-        self.scan_button = ctk.CTkButton(button_frame, text="Scan", command=lambda: self.send_command("scan"))
-        self.scan_button.pack(side="left", padx=5, expand=True)
-
-        self.results_button = ctk.CTkButton(button_frame, text="Results", command=lambda: self.send_command("results"))
-        self.results_button.pack(side="left", padx=5, expand=True)
-
-        self.info_button = ctk.CTkButton(button_frame, text="Info", command=lambda: self.send_command("info"))
-        self.info_button.pack(side="left", padx=5, expand=True)
-
-        self.help_button = ctk.CTkButton(button_frame, text="Help", command=lambda: self.send_command("help"))
-        self.help_button.pack(side="left", padx=5, expand=True)
-
-        # Parameters frame
-        params_frame = ctk.CTkFrame(frame, corner_radius=0)
+    def setup_content_area(self):
+        # Parameters Frame
+        params_frame = ctk.CTkFrame(self.content_area)
         params_frame.pack(fill="x", padx=5, pady=5)
 
-        # First row of parameters
-        row1_frame = ctk.CTkFrame(params_frame, corner_radius=0)
-        row1_frame.pack(fill="x", pady=2)
+        # Parameters in a grid layout
+        params = [
+            ("Cycle Delay (ms):", "cycle_delay_entry", "2000"),
+            ("Scan Time (ms):", "scan_time_entry", "5000"),
+            ("Num Frames:", "num_frames_entry", "3"),
+            ("Start Channel:", "start_channel_entry", "1")
+        ]
 
-        ctk.CTkLabel(row1_frame, text="Cycle Delay (ms):").pack(side="left", padx=5)
-        self.cycle_delay_entry = ctk.CTkEntry(row1_frame, width=100)
-        self.cycle_delay_entry.pack(side="left", padx=5)
-        self.cycle_delay_entry.insert(0, "2000")
+        for i, (label, attr, default) in enumerate(params):
+            ctk.CTkLabel(params_frame, text=label).grid(row=i//2, column=i%2*2, padx=5, pady=2, sticky="e")
+            entry = ctk.CTkEntry(params_frame, width=100)
+            entry.grid(row=i//2, column=i%2*2+1, padx=5, pady=2, sticky="w")
+            entry.insert(0, default)
+            setattr(self, attr, entry)
 
-        ctk.CTkLabel(row1_frame, text="Scan Time (ms):").pack(side="left", padx=5)
-        self.scan_time_entry = ctk.CTkEntry(row1_frame, width=100)
-        self.scan_time_entry.pack(side="left", padx=5)
-        self.scan_time_entry.insert(0, "5000")
-
-        ctk.CTkLabel(row1_frame, text="Num Frames:").pack(side="left", padx=5)
-        self.num_frames_entry = ctk.CTkEntry(row1_frame, width=100)
-        self.num_frames_entry.pack(side="left", padx=5)
-        self.num_frames_entry.insert(0, "3")
-
-        # Add Apply button aligned with Help button
-        self.apply_params_button = ctk.CTkButton(row1_frame, text="Apply", command=self.apply_parameters)
-        self.apply_params_button.pack(side="right", padx=5)
-
-        # Second row of parameters
-        row2_frame = ctk.CTkFrame(params_frame, corner_radius=0)
-        row2_frame.pack(fill="x", pady=2)
-
-        ctk.CTkLabel(row2_frame, text="Start Channel:").pack(side="left", padx=5)
-        self.start_channel_entry = ctk.CTkEntry(row2_frame, width=100)
-        self.start_channel_entry.pack(side="left", padx=5)
-        self.start_channel_entry.insert(0, "1")
-
-        ctk.CTkLabel(row2_frame, text="Scan Between Cycles:").pack(side="left", padx=5)
+        # Combo boxes row
+        ctk.CTkLabel(params_frame, text="Scan Between Cycles:").grid(row=2, column=0, padx=5, pady=2, sticky="e")
         self.scan_cycles_var = ctk.StringVar(value="off")
-        self.scan_cycles_combo = ctk.CTkComboBox(row2_frame, values=["on", "off"], variable=self.scan_cycles_var)
-        self.scan_cycles_combo.pack(side="left", padx=5)
+        self.scan_cycles_combo = ctk.CTkComboBox(params_frame, values=["on", "off"], 
+                                                variable=self.scan_cycles_var, width=100)
+        self.scan_cycles_combo.grid(row=2, column=1, padx=5, pady=2, sticky="w")
 
-        ctk.CTkLabel(row2_frame, text="LEDs:").pack(side="left", padx=5)
+        ctk.CTkLabel(params_frame, text="LEDs:").grid(row=2, column=2, padx=5, pady=2, sticky="e")
         self.led_var = ctk.StringVar(value="on")
-        self.led_combo = ctk.CTkComboBox(row2_frame, values=["on", "off"], variable=self.led_var)
-        self.led_combo.pack(side="left", padx=5)
+        self.led_combo = ctk.CTkComboBox(params_frame, values=["on", "off"], 
+                                        variable=self.led_var, width=100)
+        self.led_combo.grid(row=2, column=3, padx=5, pady=2, sticky="w")
 
-    def setup_target_frame(self):
-        frame = ctk.CTkFrame(self.root, corner_radius=10)
-        frame.pack(fill="x", padx=10, pady=5)
+        self.apply_params_button = ctk.CTkButton(params_frame, text="Apply Parameters", 
+                                                command=self.apply_parameters)
+        self.apply_params_button.grid(row=3, column=0, columnspan=4, pady=10)
 
-        ctk.CTkLabel(frame, text="Target Indices (comma-separated):").grid(column=0, row=0, padx=5, pady=5, sticky="e")
-        self.target_entry = ctk.CTkEntry(frame, width=200)
-        self.target_entry.grid(column=1, row=0, padx=5, pady=5, sticky="w")
+        # Target Frame
+        target_frame = ctk.CTkFrame(self.content_area)
+        target_frame.pack(fill="x", padx=5, pady=5)
 
-        self.set_target_button = ctk.CTkButton(frame, text="Set Target", command=self.set_target)
-        self.set_target_button.grid(column=2, row=0, padx=5, pady=5)
+        ctk.CTkLabel(target_frame, text="Target Indices:").pack(side="left", padx=5)
+        self.target_entry = ctk.CTkEntry(target_frame, width=200)
+        self.target_entry.pack(side="left", padx=5)
+        self.set_target_button = ctk.CTkButton(target_frame, text="Set Target", 
+                                              command=self.set_target)
+        self.set_target_button.pack(side="left", padx=5)
 
-        ctk.CTkLabel(frame, text="Custom Command:").grid(column=0, row=1, padx=5, pady=5, sticky="e")
-        self.custom_cmd_entry = ctk.CTkEntry(frame, width=200)
-        self.custom_cmd_entry.grid(column=1, row=1, padx=5, pady=5, sticky="w")
+        # Custom Command Frame
+        custom_frame = ctk.CTkFrame(self.content_area)
+        custom_frame.pack(fill="x", padx=5, pady=5)
 
-        self.custom_cmd_button = ctk.CTkButton(frame, text="Send", command=self.send_custom_command)
-        self.custom_cmd_button.grid(column=2, row=1, padx=5, pady=5)
+        ctk.CTkLabel(custom_frame, text="Custom Command:").pack(side="left", padx=5)
+        self.custom_cmd_entry = ctk.CTkEntry(custom_frame, width=200)
+        self.custom_cmd_entry.pack(side="left", padx=5)
+        self.custom_cmd_button = ctk.CTkButton(custom_frame, text="Send", 
+                                              command=self.send_custom_command)
+        self.custom_cmd_button.pack(side="left", padx=5)
+
+        # Terminal Output
+        self.setup_output_frame()
 
     def setup_output_frame(self):
-        frame = ctk.CTkFrame(self.root, corner_radius=10)
-        frame.pack(fill="both", expand=True, padx=10, pady=5)
-
-        # Configure text widget with cyberpunk styling
+        # Terminal takes remaining space
         self.output_text = ctk.CTkTextbox(
-            frame,
+            self.content_area,
             height=400,
             wrap="none",
-            font=("Fira Code", 12),  # Primary font choice
+            font=("Fira Code", 12),
             text_color="#00ff00",  # Matrix green
             fg_color="#000000",    # Black background
         )
+        self.output_text.pack(fill="both", expand=True, padx=5, pady=5)
         
         try:
             self.output_text.configure(font=("Fira Code", 12))
@@ -227,9 +198,7 @@ class EvilBW16GUI:
                 self.output_text.configure(font=("Cascadia Code", 12))
             except:
                 self.output_text.configure(font=("Consolas", 12))
-        
-        self.output_text.pack(fill="both", expand=True, padx=5, pady=5)
-        
+
         # Add ASCII art welcome message
         welcome_msg = """
  /$$$$$$$$ /$$    /$$ /$$$$$$ /$$         /$$$$$$$  /$$      /$$   /$$    /$$$$$$  
@@ -254,7 +223,7 @@ https://github.com/Hosseios
                     [ Type 'help' for available commands ]
 """
         self.output_text.insert("1.0", welcome_msg)
-        self.output_text.configure(state="disabled")  # Make read-only initially
+        self.output_text.configure(state="disabled")
 
     def append_output(self, message):
         """Add text to the output terminal with timestamp"""
