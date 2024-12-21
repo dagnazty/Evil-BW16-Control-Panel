@@ -36,6 +36,7 @@
 - [📄 License](#-license)
 - [🤝 Contributing](#-contributing)
 - [📬 Contact](#-contact)
+- [Credits](#-credits)
 
 ---
 
@@ -87,7 +88,7 @@ Whether you're a cybersecurity enthusiast or a professional tester, our control 
 
 - **Python 3.6 or Higher**
 - **Libraries:**
-  - `tkinter` (typically included with Python)
+  - `customtkinter`
   - `pystray`
   - `Pillow`
   - `pyserial`
@@ -97,7 +98,7 @@ Whether you're a cybersecurity enthusiast or a professional tester, our control 
 Install the necessary Python libraries using `pip`:
 
 ```bash
-pip install pystray Pillow pyserial
+pip install customtkinter pystray Pillow pyserial
 ```
 
 ### 🔧 Hardware
@@ -235,6 +236,13 @@ We welcome contributions! Follow these steps to contribute:
 <div align="center">
 
 Please ensure your code adheres to the project's coding standards and includes appropriate documentation.
+
+## Credits
+
+- **Developers:**
+  - [7h30th3r0n3](https://github.com/7h30th3r0n3)
+  - [dagnazty](https://github.com/dagnazty)
+  - [Hosseios](https://github.com/Hosseios)
 
 ---
 
