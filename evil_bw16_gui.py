@@ -4,8 +4,10 @@ import serial
 import serial.tools.list_ports
 import threading
 import time
-from PIL import Image
+from PIL import Image, ImageTk
 import pystray
+import sys
+import os
 
 class EvilBW16GUI:
     def __init__(self, root):
@@ -14,7 +16,14 @@ class EvilBW16GUI:
         self.root.geometry("800x600")
         self.root.resizable(True, True)
 
-        self.root.iconbitmap('icon.ico')
+        try:
+            if os.name == 'nt':
+                self.root.iconbitmap('icon.ico')
+            else:
+                self.icon_image = ImageTk.PhotoImage(Image.open('icon.ico'))
+                self.root.iconphoto(False, self.icon_image)
+        except Exception as e:
+            print(f"Icon not found or failed to load: {e}")
 
         self.serial_port = None
         self.is_connected = False
@@ -28,7 +37,7 @@ class EvilBW16GUI:
         self.tray_icon = None
         self.setup_tray_icon()
 
-        self.root.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
+        self.root.protocol("WM_DELETE_WINDOW", self.quit_app)
 
     def setup_connection_frame(self):
         frame = ttk.LabelFrame(self.root, text="Connection")
@@ -177,15 +186,22 @@ class EvilBW16GUI:
             except serial.SerialException as e:
                 messagebox.showerror("Connection Error", str(e))
         else:
-            self.stop_reading.set()
-            if self.read_thread and self.read_thread.is_alive():
-                self.read_thread.join()
-            if self.serial_port and self.serial_port.is_open:
+            self.disconnect_serial()
+
+    def disconnect_serial(self):
+        self.stop_reading.set()
+        if self.read_thread and self.read_thread.is_alive():
+            self.read_thread.join(timeout=2)
+        if self.serial_port and self.serial_port.is_open:
+            try:
                 self.serial_port.close()
-            self.is_connected = False
-            self.connect_button.config(text="Connect")
-            self.status_label.config(text="Not Connected", foreground="red")
-            self.log_output("Disconnected.\n")
+                self.log_output("Serial port closed.\n")
+            except Exception as e:
+                self.log_output(f"Error closing serial port: {e}\n")
+        self.is_connected = False
+        self.connect_button.config(text="Connect")
+        self.status_label.config(text="Not Connected", foreground="red")
+        self.log_output("Disconnected.\n")
 
     def read_from_port(self):
         while not self.stop_reading.is_set():
@@ -197,7 +213,14 @@ class EvilBW16GUI:
                 time.sleep(0.1)
             except serial.SerialException:
                 self.log_output("Serial connection lost.\n")
-                self.toggle_connection()
+                self.stop_reading.set()
+                self.is_connected = False
+                self.connect_button.config(text="Connect")
+                self.status_label.config(text="Not Connected", foreground="red")
+                break
+            except Exception as e:
+                self.log_output(f"Error reading from serial port: {e}\n")
+                self.stop_reading.set()
                 break
 
     def log_output(self, message):
@@ -213,6 +236,9 @@ class EvilBW16GUI:
                 self.log_output(f"> {command}\n")
             except serial.SerialException as e:
                 messagebox.showerror("Serial Error", str(e))
+                self.disconnect_serial()
+            except Exception as e:
+                self.log_output(f"Error sending command: {e}\n")
         else:
             messagebox.showwarning("Warning", "Not connected to any serial port.")
 
@@ -268,24 +294,46 @@ class EvilBW16GUI:
         if self.tray_icon is not None:
             self.tray_icon.visible = False
 
-    def quit_app(self, icon, item):
-        icon.visible = False
-        icon.stop()
+    def quit_app(self, icon=None, item=None):
+        self.cleanup()
+        if icon:
+            icon.visible = False
+            icon.stop()
         self.root.quit()
 
     def setup_tray_icon(self):
-        image = Image.open('icon.ico')
+        try:
+            image = Image.open('icon.ico')
+        except Exception as e:
+            messagebox.showerror("Error", f"Tray icon image not found: {e}")
+            image = Image.new('RGB', (64, 64), color='red')
+
         menu = pystray.Menu(
             pystray.MenuItem('Show', lambda icon, item: self.root.after(0, self.restore_from_tray)),
-            pystray.MenuItem('Quit', self.quit_app)
+            pystray.MenuItem('Exit', self.quit_app)
         )
 
         self.tray_icon = pystray.Icon("EvilBW16", image, "Evil-BW16 Control Panel", menu)
         threading.Thread(target=self.tray_icon.run, daemon=True).start()
 
+    def cleanup(self):
+        """Clean up resources before exiting the application."""
+        if self.is_connected:
+            self.disconnect_serial()
+
+        if self.tray_icon is not None:
+            self.tray_icon.visible = False
+            self.tray_icon.stop()
+
 def main():
     root = tk.Tk()
     app = EvilBW16GUI(root)
+
+    def on_exit():
+        app.cleanup()
+        root.destroy()
+
+    root.protocol("WM_DESTROY", on_exit)
     root.mainloop()
 
 if __name__ == "__main__":
