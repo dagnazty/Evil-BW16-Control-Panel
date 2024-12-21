@@ -4,7 +4,7 @@
 
 # 🎛️ Evil-BW16 Control Panel
 
-![Evil-BW16 Logo](icon.ico)
+![Evil-BW16 Logo](logo.png)
 
 </div>
 
