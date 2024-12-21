@@ -1,208 +1,243 @@
-# Evil-BW16 Control Panel
+<div align="center">
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![GitHub issues](https://img.shields.io/github/issues/dagnazty/Evil-BW16-Control-Panel) ![GitHub stars](https://img.shields.io/github/stars/dagnazty/Evil-BW16-Control-Panel?style=social) ![GitHub forks](https://img.shields.io/github/forks/dagnazty/Evil-BW16-Control-Panel?style=social)
+
+# 🎛️ Evil-BW16 Control Panel
 
 ![Evil-BW16 Logo](icon.ico)
 
-**Disclaimer:**  
-[Evil-BW16](https://github.com/7h30th3r0n3/Evil-BW16), is developed for educational and ethical testing purposes only. Any misuse or illegal use of this tool is strictly prohibited. The creator of Evil-BW16 assumes no liability and is not responsible for any misuse or damage caused by this tool. Users are required to comply with all applicable laws and regulations in their jurisdiction regarding network testing and ethical hacking.
+</div>
 
-## Table of Contents
+**⚠️ Disclaimer:**  
 
-- [Introduction](#introduction)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Connecting to the Device](#connecting-to-the-device)
-  - [Commands](#commands)
-  - [Setting Parameters](#setting-parameters)
-  - [Targeting APs](#targeting-aps)
-  - [Custom Commands](#custom-commands)
-  - [System Tray](#system-tray)
-- [License](#license)
-- [Contributing](#contributing)
-- [Contact](#contact)
+<div align="center">
 
-## Introduction
+[Evil-BW16](https://github.com/7h30th3r0n3/Evil-BW16) is crafted exclusively for **educational** and **ethical testing** purposes. **Misuse** or **illegal application** of this tool is **strictly forbidden**. The creator of Evil-BW16 **declines any liability** and is **not responsible** for any misuse or damage caused by this tool. Users must **adhere to all applicable laws** and regulations in their jurisdiction regarding network testing and ethical hacking.
 
-Evil-BW16 Control Panel is a user-friendly graphical interface developed with Tkinter for managing and controlling the Evil-BW16 device. The device is designed for WiFi network testing and ethical hacking purposes, allowing users to perform actions such as scanning for WiFi networks, sending deauthentication frames, and targeting specific access points (APs).
+---
 
-## Features
+</div>
 
-- **Serial Port Management:**
-  - Connect to and disconnect from serial ports.
-  - Refresh available serial ports dynamically.
+## 📖 Table of Contents
 
-- **Command Execution:**
-  - Send predefined commands like `start`, `stop`, `scan`, `results`, `info`, and `help`.
+- [✨ Introduction](#-introduction)
+- [🚀 Features](#-features)
+- [🛠️ Requirements](#️-requirements)
+  - [💻 Software](#-software)
+  - [🔧 Hardware](#-hardware)
+- [📦 Installation](#-installation)
+- [🎯 Usage](#-usage)
+  - [🔌 Connecting to the Device](#-connecting-to-the-device)
+  - [📝 Commands](#-commands)
+  - [⚙️ Setting Parameters](#-setting-parameters)
+  - [🎯 Targeting APs](#-targeting-aps)
+  - [🛠️ Custom Commands](#-custom-commands)
+  - [🔘 System Tray](#-system-tray)
+- [📄 License](#-license)
+- [🤝 Contributing](#-contributing)
+- [📬 Contact](#-contact)
+
+---
+
+## ✨ Introduction
+
+<div align="center">
+
+Welcome to the **Evil-BW16 Control Panel** – your sleek and intuitive graphical interface built with **Tkinter** for managing the powerful **Evil-BW16** device. Designed for **WiFi network testing** and **ethical hacking**, Evil-BW16 empowers you to:
+
+</div>
+
+- **Scan** for WiFi networks
+- **Send deauthentication frames**
+- **Target specific access points (APs)**
+
+<div align="center">
+  
+Whether you're a cybersecurity enthusiast or a professional tester, our control panel simplifies complex operations, making your ethical hacking endeavors both efficient and effective.
+
+</div>
+
+## 🚀 Features
+
+- **🔌 Serial Port Management:**
+  - Seamlessly connect/disconnect from serial ports.
+  - Dynamically refresh available serial ports.
+
+- **📝 Command Execution:**
+  - Execute predefined commands: `start`, `stop`, `scan`, `results`, `info`, and `help`.
   - Send custom commands for experimental features.
 
-- **Parameter Configuration:**
-  - Set parameters such as cycle delay, scan time, number of frames, start channel, scan cycles, and LED control.
-  - Apply multiple parameters simultaneously.
+- **⚙️ Parameter Configuration:**
+  - Configure settings like cycle delay, scan time, number of frames, start channel, scan cycles, and LED control.
+  - Apply multiple parameters simultaneously with ease.
 
-- **Targeting APs:**
+- **🎯 Targeting APs:**
   - Specify target AP indices to focus deauthentication attacks on selected networks.
 
-- **System Tray Integration:**
+- **🔘 System Tray Integration:**
   - Minimize the application to the system tray.
-  - Restore or quit the application from the tray icon.
+  - Easily restore or quit the application from the tray icon.
 
-- **Device Output Logging:**
-  - Real-time display of device responses and logs.
+- **📜 Device Output Logging:**
+  - Real-time display of device responses and logs for comprehensive monitoring.
 
-## Requirements
+## 🛠️ Requirements
 
-### Software
+### 💻 Software
 
-- **Python 3.6 or higher**
+- **Python 3.6 or Higher**
 - **Libraries:**
-  - `tkinter` (usually included with Python)
+  - `tkinter` (typically included with Python)
   - `pystray`
   - `Pillow`
   - `pyserial`
 
-### Installation of Python Libraries
+#### 📥 Installation of Python Libraries
 
-Install the required Python libraries using `pip`:
+Install the necessary Python libraries using `pip`:
 
 ```bash
 pip install pystray Pillow pyserial
 ```
 
-### Hardware
+### 🔧 Hardware
 
-- **Evil-BW16 Device:** Ensure you have the Evil-BW16 hardware properly connected to your computer via a serial connection (e.g., USB).
+- **🖥️ Evil-BW16 Device:** Ensure your Evil-BW16 hardware is properly connected to your computer via a serial connection (e.g., USB).
+- **🖼️ Icon File:** An `icon.ico` file is required for the application and system tray icons. Place this file in the same directory as the application script.
 
-- **Icon File:** An `icon.ico` file is required for the application icon and system tray icon. Place this file in the same directory as the application script.
+## 📦 Installation
 
-## Installation
-
-1. **Clone the Repository:**
+1. **🔍 Clone the Repository:**
 
    ```bash
    git clone https://github.com/dagnazty/Evil-BW16-Control-Panel.git
    cd Evil-BW16-Control-Panel
    ```
 
-2. **Ensure Dependencies are Installed:**
+2. **📦 Install Dependencies:**
 
-   Install the required Python libraries as mentioned in the [Requirements](#requirements) section.
+   Ensure all required Python libraries are installed as outlined in the [Requirements](#️-requirements) section.
 
-3. **Prepare the Icon:**
+3. **🖼️ Prepare the Icon:**
 
-   Ensure you have an `icon.ico` file in the project directory. This icon will be used for the application window and system tray.
+   Make sure you have an `icon.ico` file in the project directory. This icon will represent both the application window and the system tray.
 
-## Usage
+## 🎯 Usage
 
-Run the application using Python:
+Launch the Evil-BW16 Control Panel with Python:
 
 ```bash
 python evil_bw16_gui.py
 ```
 
-### Connecting to the Device
+### 🔌 Connecting to the Device
 
-1. **Select Serial Port:**
-   - Use the "Serial Port" dropdown to select the appropriate COM port connected to the Evil-BW16 device.
+1. **📡 Select Serial Port:**
+   - Choose the appropriate COM port from the "Serial Port" dropdown connected to your Evil-BW16 device.
    - Click the "Refresh" button to update the list of available ports.
 
-2. **Select Baud Rate:**
-   - Choose the baud rate from the "Baud Rate" dropdown. The default is set to `115200`.
+2. **🔢 Select Baud Rate:**
+   - Select the desired baud rate from the "Baud Rate" dropdown. The default is `115200`.
 
-3. **Connect:**
+3. **🔗 Connect:**
    - Click the "Connect" button to establish a connection with the device.
-   - Upon successful connection, the status label will display "Connected" in green.
+   - On successful connection, the status label will display "Connected" in green.
 
-### Commands
+### 📝 Commands
 
-Use the predefined command buttons to interact with the device:
+Interact with your device using predefined command buttons:
 
-- **Start:** Initiates the attack cycle.
-- **Stop:** Stops the attack cycle.
-- **Scan:** Performs a WiFi scan to detect available networks.
-- **Results:** Retrieves and displays the latest scan results.
-- **Info:** Displays the current configuration of the device.
-- **Help:** Shows a list of available commands and their descriptions.
+- **▶️ Start:** Initiates the attack cycle.
+- **⏹️ Stop:** Halts the attack cycle.
+- **🔍 Scan:** Conducts a WiFi scan to detect available networks.
+- **📄 Results:** Retrieves and displays the latest scan results.
+- **ℹ️ Info:** Shows the current configuration of the device.
+- **❓ Help:** Lists available commands and their descriptions.
 
-### Setting Parameters
+### ⚙️ Setting Parameters
 
-Configure device parameters in the "Set Parameters" section:
+Customize device parameters in the "Set Parameters" section:
 
-- **Cycle Delay (ms):** Time delay between scan/deauthentication cycles.
-- **Scan Time (ms):** Duration of each WiFi scan.
-- **Num Frames:** Number of deauthentication frames sent per AP.
-- **Start Channel:** Starting channel for scanning (e.g., `1` for 2.4GHz or `36` for 5GHz).
-- **Scan Between Cycles:** Toggle scanning between attack cycles (`on` or `off`).
-- **LEDs:** Control the device LEDs (`on` or `off`).
+- **⏱️ Cycle Delay (ms):** Time delay between scan/deauthentication cycles.
+- **⏲️ Scan Time (ms):** Duration of each WiFi scan.
+- **📊 Num Frames:** Number of deauthentication frames sent per AP.
+- **📡 Start Channel:** Starting channel for scanning (e.g., `1` for 2.4GHz or `36` for 5GHz).
+- **🔄 Scan Between Cycles:** Toggle scanning between attack cycles (`on` or `off`).
+- **💡 LEDs:** Control the device LEDs (`on` or `off`).
 
-Click the "Apply" button to send the configured parameters to the device.
+Click the **"Apply"** button to send the configured parameters to the device.
 
-### Targeting APs
+### 🎯 Targeting APs
 
-Specify target APs in the "Target APs" section:
+Focus your attacks on specific APs in the "Target APs" section:
 
-1. **Enter Target Indices:**
+1. **🔢 Enter Target Indices:**
    - Input comma-separated indices corresponding to the APs listed in the scan results (e.g., `1,3,5`).
 
-2. **Set Target:**
-   - Click the "Set Target" button to configure the device to focus attacks on the specified APs.
+2. **🎯 Set Target:**
+   - Click the **"Set Target"** button to configure the device to target the specified APs.
 
-### Custom Commands
+### 🛠️ Custom Commands
 
-Experiment with custom commands using the "Custom Command" section:
+Experiment with advanced features using the "Custom Command" section:
 
-1. **Enter Command:**
+1. **✏️ Enter Command:**
    - Type any arbitrary command in the "Command" entry field.
 
-2. **Send Command:**
-   - Click the "Send" button to transmit the custom command to the device.
+2. **🚀 Send Command:**
+   - Click the **"Send"** button to transmit the custom command to the device.
 
-**Note:** Use this feature with caution. Sending unknown or malformed commands may disrupt device functionality.
+**⚠️ Note:** Use this feature with caution. Sending unknown or malformed commands may disrupt device functionality.
 
-### System Tray
+### 🔘 System Tray
 
-Manage the application using the system tray icon:
+Manage the application conveniently via the system tray icon:
 
-- **Minimize to Tray:**
-  - Close the main window using the "X" button to hide it in the system tray.
+- **🔽 Minimize to Tray:**
+  - Click the "X" button to hide the main window in the system tray.
 
-- **Tray Menu:**
+- **🔄 Tray Menu:**
   - **Show:** Restore the main application window.
   - **Quit:** Exit the application completely.
 
-All tray and window icons use the `icon.ico` file for consistency.
+_All tray and window icons utilize the `icon.ico` file for a consistent look and feel._
 
-## License
+## 📄 License
 
-[MIT License](LICENSE)
+This project is licensed under the [MIT License](LICENSE).
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+We welcome contributions! Follow these steps to contribute:
 
-1. **Fork the Repository**
-2. **Create a Feature Branch**
+1. **🍴 Fork the Repository**
+
+2. **🌿 Create a Feature Branch**
 
    ```bash
    git checkout -b feature/YourFeature
    ```
 
-3. **Commit Your Changes**
+3. **💾 Commit Your Changes**
 
    ```bash
    git commit -m "Add some feature"
    ```
 
-4. **Push to the Branch**
+4. **📤 Push to the Branch**
 
    ```bash
    git push origin feature/YourFeature
    ```
 
-5. **Open a Pull Request**
+5. **🔀 Open a Pull Request**
+
+<div align="center">
 
 Please ensure your code adheres to the project's coding standards and includes appropriate documentation.
 
 ---
 
-**Stay Ethical. Use responsibly.**
+**🔒 Stay Ethical. Use Responsibly.**
+
+</div>
