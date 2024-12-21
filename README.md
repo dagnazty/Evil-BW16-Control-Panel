@@ -237,6 +237,8 @@ We welcome contributions! Follow these steps to contribute:
 
 Please ensure your code adheres to the project's coding standards and includes appropriate documentation.
 
+</div>
+
 ## Credits
 
 - **Developers:**
@@ -245,6 +247,9 @@ Please ensure your code adheres to the project's coding standards and includes a
   - [Hosseios](https://github.com/Hosseios)
 
 ---
+
+<div align="center">
+
 
 **🔒 Stay Ethical. Use Responsibly.**
 
