@@ -1,0 +1,6 @@
+flask==2.3.3
+flask-socketio==5.3.6
+pyserial==3.5
+python-engineio==4.7.1
+python-socketio==5.9.0
+eventlet==0.33.3
