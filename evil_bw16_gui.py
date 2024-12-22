@@ -83,10 +83,6 @@ class EvilBW16GUI:
         title_label = ctk.CTkLabel(self.drawer, text="Evil-BW16", font=("Arial", 16, "bold"))
         title_label.pack(pady=(0, 10))
 
-        # Toggle Drawer Button
-        self.toggle_button = ctk.CTkButton(self.drawer, text="<", width=30, height=30, command=self.toggle_drawer)
-        self.toggle_button.pack(pady=5)
-
         # Connection Frame
         conn_frame = ctk.CTkFrame(self.drawer)
         conn_frame.pack(fill="x", padx=10, pady=5)
@@ -419,17 +415,6 @@ class EvilBW16GUI:
             self.send_command(command)
         else:
             ctk.CTkMessagebox.show_warning("Warning", "Not connected to any serial port.")
-
-    def toggle_drawer(self):
-        """Toggle the visibility of the drawer."""
-        if self.drawer_visible:
-            self.drawer.pack_forget()
-            self.toggle_button.configure(text=">")
-            self.drawer_visible = False
-        else:
-            self.drawer.pack(side="left", fill="y", padx=0, pady=0)
-            self.toggle_button.configure(text="<")
-            self.drawer_visible = True
 
     def minimize_to_tray(self):
         self.root.withdraw()
