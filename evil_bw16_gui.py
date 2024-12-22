@@ -15,12 +15,16 @@ class EvilBW16GUI:
 
         self.root = root
         self.root.title("Evil-BW16 Control Panel")
-        self.root.geometry("1200x800")  # Wider initial window for drawer layout
+        self.root.geometry("900x600")  # Reduced initial window size for smaller screens
+        self.root.minsize(800, 500)    # Set minimum window size
         self.root.resizable(True, True)
 
         # Create main container
         self.main_container = ctk.CTkFrame(self.root)
         self.main_container.pack(fill="both", expand=True)
+
+        # Initialize drawer state
+        self.drawer_visible = True
 
         # Create left drawer
         self.drawer = ctk.CTkFrame(self.main_container, width=200, corner_radius=0)
@@ -69,59 +73,70 @@ class EvilBW16GUI:
         # Logo at top of drawer
         if hasattr(self, 'logo_image') and self.logo_image:
             ui_logo = self.logo_image.copy()
-            ui_logo.thumbnail((120, 120), Image.Resampling.LANCZOS)
-            ctk_logo = ctk.CTkImage(light_image=ui_logo, dark_image=ui_logo, size=(120, 120))
+            ui_logo.thumbnail((100, 100), Image.Resampling.LANCZOS)  # Adjusted size
+            ctk_logo = ctk.CTkImage(light_image=ui_logo, dark_image=ui_logo, size=(100, 100))
             logo_label = ctk.CTkLabel(self.drawer, image=ctk_logo, text="")
             logo_label.image = ctk_logo  # Keep a reference to prevent garbage collection
             logo_label.pack(pady=(10, 5))
 
         # Title under logo
-        title_label = ctk.CTkLabel(self.drawer, text="Evil-BW16", font=("Arial", 20, "bold"))
-        title_label.pack(pady=(0, 20))
+        title_label = ctk.CTkLabel(self.drawer, text="Evil-BW16", font=("Arial", 16, "bold"))
+        title_label.pack(pady=(0, 10))
+
+        # Toggle Drawer Button
+        self.toggle_button = ctk.CTkButton(self.drawer, text="<", width=30, height=30, command=self.toggle_drawer)
+        self.toggle_button.pack(pady=5)
 
         # Connection Frame
         conn_frame = ctk.CTkFrame(self.drawer)
         conn_frame.pack(fill="x", padx=10, pady=5)
 
         ctk.CTkLabel(conn_frame, text="Port:").pack(pady=2)
-        self.port_combo = ctk.CTkComboBox(conn_frame, values=self.get_serial_ports(), width=200)
+        self.port_combo = ctk.CTkComboBox(conn_frame, values=self.get_serial_ports(), width=180)
         self.port_combo.pack(pady=2)
 
-        self.refresh_button = ctk.CTkButton(conn_frame, text="Refresh", command=self.refresh_ports, width=200)
+        self.refresh_button = ctk.CTkButton(conn_frame, text="Refresh", command=self.refresh_ports, width=180)
         self.refresh_button.pack(pady=2)
 
         ctk.CTkLabel(conn_frame, text="Baud Rate:").pack(pady=2)
         self.baud_combo = ctk.CTkComboBox(conn_frame, values=["9600", "19200", "38400", "57600", "115200"], 
-                                         state="readonly", width=200)
+                                         state="readonly", width=180)
         self.baud_combo.pack(pady=2)
         self.baud_combo.set("115200")
 
-        self.connect_button = ctk.CTkButton(conn_frame, text="Connect", command=self.toggle_connection, width=200)
+        self.connect_button = ctk.CTkButton(conn_frame, text="Connect", command=self.toggle_connection, width=180)
         self.connect_button.pack(pady=5)
 
         self.status_label = ctk.CTkLabel(conn_frame, text="Not Connected", text_color="red")
         self.status_label.pack(pady=2)
 
-        # Command Buttons Frame
-        cmd_frame = ctk.CTkFrame(self.drawer)
-        cmd_frame.pack(fill="x", padx=5, pady=5)
+        # Command Buttons Frame with Scrollbar
+        cmd_frame_container = ctk.CTkScrollableFrame(self.drawer, width=200, height=400)
+        cmd_frame_container.pack(fill="both", expand=True, padx=5, pady=5)
 
+        self.cmd_frame = ctk.CTkFrame(cmd_frame_container)
+        self.cmd_frame.pack(fill="both", expand=True)
+
+        # Updated commands list with new selections
         commands = [
-            ("⚡ Start", "start"),      # Lightning bolt for Start
-            ("⏹️ Stop", "stop"),        # Stop symbol
-            ("🔍 Scan", "scan"),        # Magnifying glass for Scan
-            ("📊 Results", "results"),  # Chart for Results
-            ("ℹ️ Info", "info"),        # Info symbol
-            ("❓ Help", "help")         # Question mark for Help
+            ("⚡ Start Deauth", "start"),                 # Start Deauthentication Attack
+            ("⏹️ Stop All", "stop"),                      # Stop All Attacks
+            ("🔍 Scan Networks", "scan"),                 # Scan Networks
+            ("📊 Show Results", "results"),               # Show Scan Results
+            ("🛑 Disassoc Start", "disassoc"),       # Start Disassociation Attack
+            ("📡 Beacon Spam Start", "beacon_spam"), # Start Beacon Spam
+            ("🎲 Random Attack", "random_attack"),         # Perform Random Attack
+            ("ℹ️ Info", "info"),                           # Display Info
+            ("❓ Help", "help")                            # Display Help
         ]
 
         for text, cmd in commands:
-            btn = ctk.CTkButton(cmd_frame, text=text, 
+            btn = ctk.CTkButton(self.cmd_frame, text=text, 
                               command=lambda c=cmd: self.send_command(c), 
                               width=180,
-                              height=32,
+                              height=30,
                               font=("Arial", 12))
-            btn.pack(pady=2)  
+            btn.pack(pady=2, anchor="w")  # Align buttons to the left
 
     def setup_content_area(self):
         # Parameters Frame
@@ -137,9 +152,11 @@ class EvilBW16GUI:
         ]
 
         for i, (label, attr, default) in enumerate(params):
-            ctk.CTkLabel(params_frame, text=label).grid(row=i//2, column=i%2*2, padx=5, pady=2, sticky="e")
+            row = i // 2
+            col = (i % 2) * 2
+            ctk.CTkLabel(params_frame, text=label).grid(row=row, column=col, padx=5, pady=2, sticky="e")
             entry = ctk.CTkEntry(params_frame, width=100)
-            entry.grid(row=i//2, column=i%2*2+1, padx=5, pady=2, sticky="w")
+            entry.grid(row=row, column=col+1, padx=5, pady=2, sticky="w")
             entry.insert(0, default)
             setattr(self, attr, entry)
 
@@ -157,7 +174,7 @@ class EvilBW16GUI:
         self.led_combo.grid(row=2, column=3, padx=5, pady=2, sticky="w")
 
         self.apply_params_button = ctk.CTkButton(params_frame, text="Apply Parameters", 
-                                                command=self.apply_parameters)
+                                                command=self.apply_parameters, width=200)
         self.apply_params_button.grid(row=3, column=0, columnspan=4, pady=10)
 
         # Target Frame
@@ -165,10 +182,10 @@ class EvilBW16GUI:
         target_frame.pack(fill="x", padx=5, pady=5)
 
         ctk.CTkLabel(target_frame, text="Target Indices:").pack(side="left", padx=5)
-        self.target_entry = ctk.CTkEntry(target_frame, width=200)
+        self.target_entry = ctk.CTkEntry(target_frame, width=150)
         self.target_entry.pack(side="left", padx=5)
         self.set_target_button = ctk.CTkButton(target_frame, text="Set Target", 
-                                              command=self.set_target)
+                                              command=self.set_target, width=100)
         self.set_target_button.pack(side="left", padx=5)
 
         # Custom Command Frame
@@ -179,18 +196,27 @@ class EvilBW16GUI:
         self.custom_cmd_entry = ctk.CTkEntry(custom_frame, width=200)
         self.custom_cmd_entry.pack(side="left", padx=5)
         self.custom_cmd_button = ctk.CTkButton(custom_frame, text="Send", 
-                                              command=self.send_custom_command)
+                                              command=self.send_custom_command, width=100)
         self.custom_cmd_button.pack(side="left", padx=5)
 
         # Terminal Output
         self.setup_output_frame()
 
+        # Add Clear Button below the terminal output
+        clear_button = ctk.CTkButton(self.content_area, text="Clear Output", 
+                                     command=self.clear_output, 
+                                     width=120,
+                                     height=30,
+                                     fg_color="red",
+                                     hover_color="darkred")
+        clear_button.pack(pady=(0, 10))
+
     def setup_output_frame(self):
         self.output_text = ctk.CTkTextbox(
             self.content_area,
-            height=400,
-            wrap="none",
-            font=("Courier", 12), 
+            height=200,  # Adjusted height for smaller screens
+            wrap="word",
+            font=("Courier", 10),  # Smaller font size
             text_color="#00ff00",
             fg_color="#000000",
         )
@@ -205,11 +231,18 @@ class EvilBW16GUI:
         self.output_text.insert("1.0", welcome_msg)
         self.output_text.configure(state="disabled")
 
+    def clear_output(self):
+        """Clear the terminal output."""
+        self.output_text.configure(state="normal")
+        self.output_text.delete("1.0", "end")
+        self.output_text.configure(state="disabled")
+        self.append_output("Terminal output cleared.\n")
+
     def append_output(self, message):
         """Add text to the output terminal with timestamp"""
         self.output_text.configure(state="normal")
         timestamp = time.strftime("[%H:%M:%S] ", time.localtime())
-        self.output_text.insert("end", f"\n{timestamp}{message}")
+        self.output_text.insert("end", f"{timestamp}{message}\n")
         self.output_text.see("end")
         self.output_text.configure(state="disabled")
 
@@ -229,7 +262,7 @@ class EvilBW16GUI:
         else:
             self.port_combo.set('')
 
-        self.append_output("Ports refreshed.\n")
+        self.append_output("Ports refreshed.")
 
     def toggle_connection(self):
         if not self.is_connected:
@@ -243,7 +276,7 @@ class EvilBW16GUI:
                 self.is_connected = True
                 self.connect_button.configure(text="Disconnect")
                 self.status_label.configure(text="Connected", text_color="green")
-                self.append_output(f"Connected to {selected_port} at {baud_rate} baud.\n")
+                self.append_output(f"Connected to {selected_port} at {baud_rate} baud.")
                 self.stop_reading.clear()
                 self.read_thread = threading.Thread(target=self.read_from_port, daemon=True)
                 self.read_thread.start()
@@ -259,13 +292,13 @@ class EvilBW16GUI:
         if self.serial_port and self.serial_port.is_open:
             try:
                 self.serial_port.close()
-                self.append_output("Serial port closed.\n")
+                self.append_output("Serial port closed.")
             except Exception as e:
-                self.append_output(f"Error closing serial port: {e}\n")
+                self.append_output(f"Error closing serial port: {e}")
         self.is_connected = False
         self.connect_button.configure(text="Connect")
         self.status_label.configure(text="Not Connected", text_color="red")
-        self.append_output("Disconnected.\n")
+        self.append_output("Disconnected.")
 
     def read_from_port(self):
         while not self.stop_reading.is_set():
@@ -276,29 +309,74 @@ class EvilBW16GUI:
                         self.append_output(data)
                 time.sleep(0.1)
             except serial.SerialException:
-                self.append_output("Serial connection lost.\n")
+                self.append_output("Serial connection lost.")
                 self.stop_reading.set()
                 self.is_connected = False
                 self.connect_button.configure(text="Connect")
                 self.status_label.configure(text="Not Connected", text_color="red")
                 break
             except Exception as e:
-                self.append_output(f"Error reading from serial port: {e}\n")
+                self.append_output(f"Error reading from serial port: {e}")
                 self.stop_reading.set()
                 break
 
     def send_command(self, command):
         if self.is_connected and self.serial_port and self.serial_port.is_open:
             try:
-                self.serial_port.write((command + "\n").encode())
-                self.append_output(f"> {command}\n")
+                # Handle special commands that require parameters
+                if command == "attack_time":
+                    # Prompt user for duration
+                    duration = self.prompt_for_duration()
+                    if duration:
+                        full_command = f"attack_time {duration}"
+                        self.serial_port.write((full_command + "\n").encode())
+                        self.append_output(f"> {full_command}")
+                elif command == "disassoc":
+                    full_command = "disassoc"
+                    self.serial_port.write((full_command + "\n").encode())
+                    self.append_output(f"> {full_command}")
+                elif command == "beacon_spam":
+                    full_command = "beacon_spam"
+                    self.serial_port.write((full_command + "\n").encode())
+                    self.append_output(f"> {full_command}")
+                else:
+                    self.serial_port.write((command + "\n").encode())
+                    self.append_output(f"> {command}")
             except serial.SerialException as e:
                 ctk.CTkMessagebox.show_error("Serial Error", str(e))
                 self.disconnect_serial()
             except Exception as e:
-                self.append_output(f"Error sending command: {e}\n")
+                self.append_output(f"Error sending command: {e}")
         else:
             ctk.CTkMessagebox.show_warning("Warning", "Not connected to any serial port.")
+
+    def prompt_for_duration(self):
+        """Prompt the user to enter a duration for the timed attack."""
+        duration_window = ctk.CTkToplevel(self.root)
+        duration_window.title("Enter Attack Duration")
+        duration_window.geometry("300x150")
+        duration_window.grab_set()  # Make the window modal
+
+        ctk.CTkLabel(duration_window, text="Enter duration in ms:", font=("Arial", 14)).pack(pady=10)
+
+        duration_entry = ctk.CTkEntry(duration_window, width=200)
+        duration_entry.pack(pady=5)
+        duration_entry.focus()
+
+        def submit_duration():
+            value = duration_entry.get()
+            if value.isdigit() and int(value) > 0:
+                duration_window.duration = value
+                duration_window.destroy()
+            else:
+                ctk.CTkMessagebox.show_error("Invalid Input", "Please enter a positive integer.")
+
+        submit_button = ctk.CTkButton(duration_window, text="Submit", command=submit_duration)
+        submit_button.pack(pady=10)
+
+        self.root.wait_window(duration_window)
+
+        return getattr(duration_window, 'duration', None)
 
     def send_custom_command(self):
         cmd = self.custom_cmd_entry.get().strip()
@@ -341,6 +419,17 @@ class EvilBW16GUI:
             self.send_command(command)
         else:
             ctk.CTkMessagebox.show_warning("Warning", "Not connected to any serial port.")
+
+    def toggle_drawer(self):
+        """Toggle the visibility of the drawer."""
+        if self.drawer_visible:
+            self.drawer.pack_forget()
+            self.toggle_button.configure(text=">")
+            self.drawer_visible = False
+        else:
+            self.drawer.pack(side="left", fill="y", padx=0, pady=0)
+            self.toggle_button.configure(text="<")
+            self.drawer_visible = True
 
     def minimize_to_tray(self):
         self.root.withdraw()
@@ -394,11 +483,11 @@ def main():
     app = ctk.CTk()  # Initialize the customtkinter application
     app.title("Evil-BW16 Control Panel")
     gui = EvilBW16GUI(app)  # Create an instance of your GUI class
-    
+
     def on_exit():
         gui.cleanup()
         app.destroy()
-    
+
     app.protocol("WM_DELETE_WINDOW", on_exit)
     app.mainloop()  # Start the GUI main loop
 
