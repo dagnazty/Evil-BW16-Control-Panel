@@ -120,7 +120,6 @@ class EvilBW16GUI:
             ("🔍 Scan Networks", "scan"),                 # Scan Networks
             ("📊 Show Results", "results"),               # Show Scan Results
             ("🛑 Disassoc Start", "disassoc"),       # Start Disassociation Attack
-            ("📡 Beacon Spam Start", "beacon_spam"), # Start Beacon Spam
             ("🎲 Random Attack", "random_attack"),         # Perform Random Attack
             ("ℹ️ Info", "info"),                           # Display Info
             ("❓ Help", "help")                            # Display Help
@@ -329,10 +328,6 @@ class EvilBW16GUI:
                         self.append_output(f"> {full_command}")
                 elif command == "disassoc":
                     full_command = "disassoc"
-                    self.serial_port.write((full_command + "\n").encode())
-                    self.append_output(f"> {full_command}")
-                elif command == "beacon_spam":
-                    full_command = "beacon_spam"
                     self.serial_port.write((full_command + "\n").encode())
                     self.append_output(f"> {full_command}")
                 else:
