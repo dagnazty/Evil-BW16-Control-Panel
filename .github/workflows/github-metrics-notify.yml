@@ -8,11 +8,38 @@ permissions:
   issues: read            # Optional: if you're interacting with issues
   pull-requests: write    # Optional: if you're interacting with pull requests
 
-# Triggers the workflow every hour and allows manual triggering
+# Triggers the workflow on specific GitHub events and schedules it as a backup
 on:
+  # Trigger on repository star events
+  watch:
+    types: [started, deleted] # 'started' for star, 'deleted' for unstar
+
+  # Trigger on repository forks
+  fork:
+
+  # Trigger on issue events
+  issues:
+    types: [opened, closed, reopened, edited]
+
+  # Trigger on pull request events
+  pull_request:
+    types: [opened, closed, reopened, edited]
+
+  # Trigger on release events
+  release:
+    types: [published, edited, prereleased, released]
+
+  # Trigger on push events to the main branch
+  push:
+    branches:
+      - main
+
+  # Scheduled backup trigger every hour for followers/subscribers
   schedule:
     - cron: '0 */1 * * *' # Every hour at minute 0
-  workflow_dispatch:       # Allows manual triggering
+
+  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   notify_metrics:
@@ -44,7 +71,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}               # Built-in secret provided by GitHub Actions
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }} # Your Discord webhook URL
-          GITHUB_EVENT_NAME: ${{ github.event_name }}             # To determine if run is manual or scheduled
+          GITHUB_EVENT_NAME: ${{ github.event_name }}             # To determine if run is manual or triggered by an event
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }} # Dynamic repository owner
         run: |
           python3 - <<'EOF' > fetch_metrics.out
@@ -154,8 +181,11 @@ jobs:
                   # Manual run: Send notification for initial setup
                   send_notification = True
                   initial_setup = True
-              elif event_name == 'schedule':
-                  # Scheduled run: Do not send notification on initial setup
+              elif event_name == 'watch' and changes.get('stars'):
+                  # Initial run triggered by a star event: Send notification
+                  send_notification = True
+              else:
+                  # Event-triggered runs: Do not send notification on initial setup
                   send_notification = False
           else:
               if event_name == 'workflow_dispatch':
@@ -163,8 +193,12 @@ jobs:
                   send_notification = True
                   if not changes:
                       no_changes = True
-              elif event_name == 'schedule':
-                  # Scheduled run: Send notification only if there are changes
+              elif event_name == 'watch':
+                  # Star event: Send notification only if stars changed
+                  if changes.get('stars'):
+                      send_notification = True
+              else:
+                  # Scheduled run or other events: Send notification only if there are changes
                   if changes:
                       send_notification = True
 
@@ -293,9 +327,9 @@ jobs:
         id: decide_notification
         run: |
             if grep -q "SEND_NOTIFICATION=true" fetch_metrics.out; then
-            echo "send=true" >> $GITHUB_OUTPUT
+              echo "send=true" >> $GITHUB_OUTPUT
             else
-            echo "send=false" >> $GITHUB_OUTPUT
+              echo "send=false" >> $GITHUB_OUTPUT
             fi
         shell: bash
 
