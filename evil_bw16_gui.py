@@ -115,14 +115,25 @@ class EvilBW16GUI:
 
         # Updated commands list with new selections
         commands = [
-            ("⚡ Start Deauth", "start"),                 # Start Deauthentication Attack
-            ("⏹️ Stop All", "stop"),                      # Stop All Attacks
-            ("🔍 Scan Networks", "scan"),                 # Scan Networks
-            ("📊 Show Results", "results"),               # Show Scan Results
-            ("🛑 Disassoc Start", "disassoc"),       # Start Disassociation Attack
-            ("🎲 Random Attack", "random_attack"),         # Perform Random Attack
-            ("ℹ️ Info", "info"),                           # Display Info
-            ("❓ Help", "help")                            # Display Help
+            ("⚡ Start Deauther", "start deauther"),      # Begin the deauth attack cycle
+            ("⏹️ Stop Deauther", "stop deauther"),        # Stop all attack cycles
+            ("🔍 Scan", "scan"),                          # Perform a WiFi scan
+            ("📊 Results", "results"),                    # Show last scan results
+            ("🛑 Disassoc", "disassoc"),                  # Begin continuous disassociation attacks
+            ("🎲 Random Attack", "random_attack"),         # Deauth random AP from scan list
+            ("⏱️ Attack Time", "attack_time"),            # Start a timed attack
+            ("👁️ Start Sniff", "start sniff"),           # Enable sniffer with ALL mode
+            ("🔍 Sniff Beacon", "sniff beacon"),          # Toggle beacon capture
+            ("📡 Sniff Probe", "sniff probe"),            # Toggle probe requests/responses
+            ("⚡ Sniff Deauth", "sniff deauth"),          # Toggle deauth/disassoc frames
+            ("🔑 Sniff EAPOL", "sniff eapol"),            # Toggle EAPOL frames
+            ("🤖 Sniff Pwnagotchi", "sniff pwnagotchi"),  # Toggle Pwnagotchi beacons
+            ("👀 Sniff All", "sniff all"),                # Toggle all frames
+            ("⏹️ Stop Sniff", "stop sniff"),              # Stop sniffing
+            ("🔄 Hop On", "hop on"),                      # Enable channel hopping
+            ("⏸️ Hop Off", "hop off"),                    # Disable channel hopping
+            ("ℹ️ Info", "info"),                          # Display current configuration
+            ("❓ Help", "help")                           # Display help message
         ]
 
         for text, cmd in commands:
@@ -143,7 +154,8 @@ class EvilBW16GUI:
             ("Cycle Delay (ms):", "cycle_delay_entry", "2000"),
             ("Scan Time (ms):", "scan_time_entry", "5000"),
             ("Num Frames:", "num_frames_entry", "3"),
-            ("Start Channel:", "start_channel_entry", "1")
+            ("Start Channel:", "start_channel_entry", "1"),
+            ("Hop Interval (ms):", "hop_interval_entry", "500")
         ]
 
         for i, (label, attr, default) in enumerate(params):
@@ -168,9 +180,31 @@ class EvilBW16GUI:
                                         variable=self.led_var, width=100)
         self.led_combo.grid(row=2, column=3, padx=5, pady=2, sticky="w")
 
+        # Add sniffing mode selection
+        ctk.CTkLabel(params_frame, text="Sniff Mode:").grid(row=2, column=4, padx=5, pady=2, sticky="e")
+        self.sniff_mode_var = ctk.StringVar(value="all")
+        self.sniff_mode_combo = ctk.CTkComboBox(params_frame, values=["all", "beacon", "probe", "deauth", "eapol", "pwnagotchi"], 
+                                               variable=self.sniff_mode_var, width=100)
+        self.sniff_mode_combo.grid(row=2, column=5, padx=5, pady=2, sticky="w")
+
+        # Add channel hopping controls
+        ctk.CTkLabel(params_frame, text="Channel Band:").grid(row=3, column=4, padx=5, pady=2, sticky="e")
+        self.channel_band_var = ctk.StringVar(value="2.4GHz")
+        self.channel_band_combo = ctk.CTkComboBox(params_frame, values=["2.4GHz", "5GHz", "Both"], 
+                                                 variable=self.channel_band_var, width=100)
+        self.channel_band_combo.grid(row=3, column=5, padx=5, pady=2, sticky="w")
+
+        # Add debug mode toggle
+        ctk.CTkLabel(params_frame, text="Debug Mode:").grid(row=3, column=2, padx=5, pady=2, sticky="e")
+        self.debug_var = ctk.StringVar(value="off")
+        self.debug_combo = ctk.CTkComboBox(params_frame, values=["on", "off"], 
+                                         variable=self.debug_var, width=100,
+                                         command=self.toggle_debug_mode)
+        self.debug_combo.grid(row=3, column=3, padx=5, pady=2, sticky="w")
+
         self.apply_params_button = ctk.CTkButton(params_frame, text="Apply Parameters", 
-                                                command=self.apply_parameters, width=200)
-        self.apply_params_button.grid(row=3, column=0, columnspan=4, pady=10)
+                                                command=self.apply_parameters, width=100)
+        self.apply_params_button.grid(row=3, column=0, columnspan=3, padx=5, pady=10)
 
         # Target Frame
         target_frame = ctk.CTkFrame(self.content_area)
@@ -236,8 +270,15 @@ class EvilBW16GUI:
     def append_output(self, message):
         """Add text to the output terminal with timestamp"""
         self.output_text.configure(state="normal")
-        timestamp = time.strftime("[%H:%M:%S] ", time.localtime())
-        self.output_text.insert("end", f"{timestamp}{message}\n")
+                  
+        # Only add timestamp for commands and important events
+        if message.startswith("> ") or "Connected to" in message or "Disconnected" in message:
+            timestamp = time.strftime("[%H:%M:%S] ", time.localtime())
+            self.output_text.insert("end", f"{timestamp}{message}\n")
+        else:
+            # For response lines, just add the message
+            self.output_text.insert("end", f"{message}\n")
+            
         self.output_text.see("end")
         self.output_text.configure(state="disabled")
 
@@ -316,6 +357,10 @@ class EvilBW16GUI:
                 break
 
     def send_command(self, command):
+        if command == "help":
+            self.show_help()
+            return
+
         if self.is_connected and self.serial_port and self.serial_port.is_open:
             try:
                 # Handle special commands that require parameters
@@ -328,6 +373,10 @@ class EvilBW16GUI:
                         self.append_output(f"> {full_command}")
                 elif command == "disassoc":
                     full_command = "disassoc"
+                    self.serial_port.write((full_command + "\n").encode())
+                    self.append_output(f"> {full_command}")
+                elif command == "beacon_spam":
+                    full_command = "beacon_spam"
                     self.serial_port.write((full_command + "\n").encode())
                     self.append_output(f"> {full_command}")
                 else:
@@ -384,6 +433,9 @@ class EvilBW16GUI:
             start_channel = self.start_channel_entry.get()
             scan_cycles = self.scan_cycles_var.get()
             leds = self.led_var.get()
+            hop_interval = self.hop_interval_entry.get()
+            sniff_mode = self.sniff_mode_var.get()
+            channel_band = self.channel_band_var.get()
 
             commands = [
                 f"set cycle_delay {cycle_delay}",
@@ -391,7 +443,10 @@ class EvilBW16GUI:
                 f"set num_frames {num_frames}",
                 f"set start_channel {start_channel}",
                 f"set scan_cycles {scan_cycles}",
-                f"set led {leds}"
+                f"set led {leds}",
+                f"set hop_interval {hop_interval}",
+                f"set sniff_mode {sniff_mode}",
+                f"set channel_band {channel_band}"
             ]
 
             for cmd in commands:
@@ -458,6 +513,77 @@ class EvilBW16GUI:
         if self.tray_icon is not None:
             self.tray_icon.visible = False
             self.tray_icon.stop()
+
+    def toggle_debug_mode(self, value):
+        """Toggle debug mode on the device"""
+        if self.is_connected and self.serial_port and self.serial_port.is_open:
+            command = f"debug {value}"
+            self.send_command(command)
+
+    def show_help(self):
+        """Display help in a popup window"""
+        help_window = ctk.CTkToplevel(self.root)
+        help_window.title("Evil-BW16 Help")
+        help_window.geometry("800x600")
+        help_window.grab_set()  # Make the window modal
+
+        # Create a scrollable text widget
+        help_text = ctk.CTkTextbox(
+            help_window,
+            wrap="word",
+            font=("Courier", 12),
+            text_color="#00ff00",
+            fg_color="#000000",
+        )
+        help_text.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Help content
+        help_content = """[Deauther] Available Commands.
+  - start deauther       : Begin the deauth attack cycle.
+  - stop deauther        : Stop all attack cycles.
+  - scan                 : Perform a WiFi scan and display results.
+  - results              : Show last scan results.
+  - disassoc             : Begin continuous disassociation attacks.
+  - random_attack        : Deauth a randomly chosen AP from the scan list.
+  - attack_time <ms>     : Start a timed attack for the specified duration.
+
+[Sniffer] WiFi Sniffer Commands.
+  - start sniff          : Enable the sniffer with ALL mode.
+  - sniff beacon         : Enable/Disable beacon capture.
+  - sniff probe          : Enable/Disable probe requests/responses.
+  - sniff deauth         : Enable/Disable deauth/disassoc frames.
+  - sniff eapol          : Enable/Disable EAPOL frames.
+  - sniff pwnagotchi     : Enable/Disable Pwnagotchi beacons.
+  - sniff all            : Enable/Disable all frames.
+  - stop sniff           : Stop sniffing.
+  - hop on               : Enable channel hopping.
+  - hop off              : Disable channel hopping.
+
+[Configuration] Set Commands:
+  - set <key> <value>    : Update configuration values:
+      * ch X             : Set to specific channel X, or 'set ch 1,6,36' for multiple.
+      * target <indices> : Set target APs by their indices, e.g., 'set target 1,3,5'.
+      * cycle_delay (ms) : Delay between scan/deauth cycles.
+      * scan_time (ms)   : Duration of WiFi scans.
+      * num_frames       : Number of frames sent per AP.
+      * start_channel    : Start channel for scanning (1 or 36).
+      * scan_cycles      : on/off - Enable or disable scan between cycles.
+      * led on/off       : Enable or disable LEDs.
+  - info                 : Display the current configuration.
+  - help                 : Display this help message."""
+
+        help_text.insert("1.0", help_content)
+        help_text.configure(state="disabled")
+
+        # Add a close button
+        close_button = ctk.CTkButton(
+            help_window,
+            text="Close",
+            command=help_window.destroy,
+            width=120,
+            height=30
+        )
+        close_button.pack(pady=(0, 10))
 
 def main():
     app = ctk.CTk()  # Initialize the customtkinter application
