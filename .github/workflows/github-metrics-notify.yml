@@ -203,6 +203,8 @@ jobs:
                       send_notification = True
 
           if send_notification:
+              triggering_actor = os.getenv('GITHUB_ACTOR', 'Unknown')
+
               # Prepare Discord notification payload
               payload = {
                   "embeds": [
@@ -243,6 +245,11 @@ jobs:
                                   "name": "🔒 Closed Issues",
                                   "value": f"{closed_issues}",
                                   "inline": True
+                              },
+                              {
+                                  "name": "👤 Triggered By",
+                                  "value": triggering_actor,
+                                  "inline": False
                               },
                           ],
                           "footer": {
