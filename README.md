@@ -65,12 +65,16 @@ Whether you're a cybersecurity enthusiast or a professional tester, our control 
   - Dynamically refresh available serial ports.
 
 - **📝 Command Execution:**
-  - Execute predefined commands: `start`, `stop`, `scan`, `results`, `info`, and `help`.
+  - Execute predefined commands: `start deauther`, `stop deauther`, `scan`, `results`, `info`, `help`, `start sniff`, `sniff beacon`, `sniff probe`, `sniff deauth`, `sniff eapol`, `sniff pwnagotchi`, `sniff all`, `stop sniff`, `hop on`, `hop off`.
   - Send custom commands for experimental features.
 
 - **⚙️ Parameter Configuration:**
-  - Configure settings like cycle delay, scan time, number of frames, start channel, scan cycles, and LED control.
+  - Configure settings like cycle delay, scan time, number of frames, start channel, scan cycles, LED control, hop interval, sniff mode, and channel band.
   - Apply multiple parameters simultaneously with ease.
+
+- **Debug and Help:**
+  - Toggle debug mode for detailed device diagnostics.
+  - Access comprehensive help documentation through the help window.
 
 - **🎯 Targeting APs:**
   - Specify target AP indices to focus deauthentication attacks on selected networks.
@@ -148,10 +152,23 @@ python evil_bw16_gui.py
 
 Interact with your device using predefined command buttons:
 
-- **▶️ Start:** Initiates the attack cycle.
-- **⏹️ Stop:** Halts the attack cycle.
+- **⚡ Start Deauther:** Initiates the deauthentication attack cycle.
+- **⏹️ Stop Deauther:** Halts the deauthentication attack cycle.
 - **🔍 Scan:** Conducts a WiFi scan to detect available networks.
 - **📄 Results:** Retrieves and displays the latest scan results.
+- **🛑 Disassoc:** Begins continuous disassociation attacks.
+- **🎲 Random Attack:** Performs a random attack on a selected AP.
+- **⏱️ Attack Time:** Starts a timed attack.
+- **👁️ Start Sniff:** Enables the sniffer with ALL mode.
+- **🔍 Sniff Beacon:** Toggles beacon capture.
+- **📡 Sniff Probe:** Toggles probe requests/responses.
+- **⚡ Sniff Deauth:** Toggles deauth/disassoc frames.
+- **🔑 Sniff EAPOL:** Toggles EAPOL frames.
+- **🤖 Sniff Pwnagotchi:** Toggles Pwnagotchi beacons.
+- **👀 Sniff All:** Toggles all frames.
+- **⏹️ Stop Sniff:** Stops sniffing.
+- **🔄 Hop On:** Enables channel hopping.
+- **⏸️ Hop Off:** Disables channel hopping.
 - **ℹ️ Info:** Shows the current configuration of the device.
 - **❓ Help:** Lists available commands and their descriptions.
 
@@ -165,6 +182,9 @@ Customize device parameters in the "Set Parameters" section:
 - **📡 Start Channel:** Starting channel for scanning (e.g., `1` for 2.4GHz or `36` for 5GHz).
 - **🔄 Scan Between Cycles:** Toggle scanning between attack cycles (`on` or `off`).
 - **💡 LEDs:** Control the device LEDs (`on` or `off`).
+- **🔄 Hop Interval (ms):** Time interval for channel hopping.
+- **🔍 Sniff Mode:** Select the sniffing mode (e.g., `beacon`, `probe`, `deauth`, `eapol`, `pwnagotchi`, `all`).
+- **📡 Channel Band:** Select the channel band (e.g., `2.4GHz`, `5GHz`).
 
 Click the **"Apply"** button to send the configured parameters to the device.
 
